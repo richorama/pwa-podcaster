@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink, useLocation } from "react-router-dom";
+import { HashRouter, Routes, Route, NavLink, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import PodcastPage from "./pages/PodcastPage";
 import PlayerPage from "./pages/PlayerPage";
@@ -47,7 +47,7 @@ function BottomNav() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="h-full flex flex-col bg-slate-900">
         <div className="flex-1 overflow-y-auto">
           <Routes>
@@ -61,6 +61,6 @@ export default function App() {
         <BottomNav />
         <Toast />
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
