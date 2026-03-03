@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-const base = process.env.BASE_URL || "/podcaster/";
+const base = process.env.BASE_URL || "/pwa-podcaster/";
 
 export default defineConfig({
   base,
