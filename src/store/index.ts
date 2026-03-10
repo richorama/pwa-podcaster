@@ -35,6 +35,7 @@ interface AppState {
 
   subscribe: (rssUrl: string) => Promise<void>;
   refresh: (podcastId: string) => Promise<void>;
+  refreshAll: () => Promise<void>;
   unsubscribe: (podcastId: string) => Promise<void>;
 
   download: (episodeId: string) => Promise<void>;
@@ -115,6 +116,35 @@ export const useStore = create<AppState>((set, get) => {
         }
       } catch (err: any) {
         get().addToast(err.message || "Failed to refresh", "error");
+      }
+    },
+
+    refreshAll: async () => {
+      try {
+        const podcasts = await db.podcasts.toArray();
+        if (podcasts.length === 0) return;
+        const results = await Promise.allSettled(
+          podcasts.map((p) => refreshPodcast(p.id))
+        );
+        let newCount = 0;
+        for (const r of results) {
+          if (r.status === "fulfilled") {
+            for (const id of r.value) {
+              get().download(id);
+              newCount++;
+            }
+          }
+        }
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed > 0) {
+          get().addToast(`Refreshed with ${failed} error(s)`, "error");
+        } else if (newCount > 0) {
+          get().addToast(`${newCount} new episode(s) found`, "success");
+        } else {
+          get().addToast("All feeds up to date", "info");
+        }
+      } catch (err: any) {
+        get().addToast(err.message || "Refresh failed", "error");
       }
     },
 

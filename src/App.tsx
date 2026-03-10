@@ -1,3 +1,4 @@
+import { Component, useState, useEffect, type ReactNode } from "react";
 import { HashRouter, Routes, Route, NavLink, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import PodcastPage from "./pages/PodcastPage";
@@ -6,6 +7,39 @@ import AllEpisodesPage from "./pages/AllEpisodesPage";
 import MiniPlayer from "./components/MiniPlayer";
 import Toast from "./components/Toast";
 import { useStore } from "./store";
+import { db } from "./services/db";
+
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="h-full flex flex-col items-center justify-center bg-slate-900 text-slate-100 p-6 text-center">
+          <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
+          <p className="text-sm text-slate-400 mb-4">{this.state.error.message}</p>
+          <button
+            onClick={() => {
+              this.setState({ error: null });
+              window.location.reload();
+            }}
+            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 rounded-lg text-sm font-medium transition-colors"
+          >
+            Reload App
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function BottomNav() {
   const location = useLocation();
@@ -45,7 +79,39 @@ function BottomNav() {
   );
 }
 
-export default function App() {
+function AppShell() {
+  const [dbReady, setDbReady] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
+
+  useEffect(() => {
+    db.open()
+      .then(() => setDbReady(true))
+      .catch((err) => setDbError(err.message || "Failed to open database"));
+  }, []);
+
+  if (dbError) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-slate-900 text-slate-100 p-6 text-center">
+        <h1 className="text-xl font-bold mb-2">Database Error</h1>
+        <p className="text-sm text-slate-400 mb-4">{dbError}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 rounded-lg text-sm font-medium transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!dbReady) {
+    return (
+      <div className="h-full flex items-center justify-center bg-slate-900">
+        <div className="text-slate-400 text-sm">Loading…</div>
+      </div>
+    );
+  }
+
   return (
     <HashRouter>
       <div className="h-full flex flex-col bg-slate-900">
@@ -62,5 +128,13 @@ export default function App() {
         <Toast />
       </div>
     </HashRouter>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppShell />
+    </ErrorBoundary>
   );
 }
