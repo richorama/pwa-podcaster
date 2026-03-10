@@ -28,6 +28,12 @@ function EpisodeRow({
   const isDownloading = episode.id in downloading;
   const progress = downloading[episode.id] ?? 0;
 
+  const progressPct =
+    !episode.completed && episode.playbackPosition > 0 && episode.duration > 0
+      ? Math.min(100, Math.round((episode.playbackPosition / episode.duration) * 100))
+      : 0;
+  const isNew = !episode.completed && episode.playbackPosition === 0;
+
   return (
     <div className="bg-slate-800 rounded-xl p-4">
       <div className="flex items-start gap-3">
@@ -41,7 +47,7 @@ function EpisodeRow({
             </h3>
           </button>
 
-          <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+          <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
             <span className="text-indigo-400 truncate max-w-[140px]">
               {podcastTitle}
             </span>
@@ -55,14 +61,39 @@ function EpisodeRow({
             )}
           </div>
 
-          <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+          {/* Status badges */}
+          <div className="flex items-center gap-2 mt-2">
             {episode.completed && (
-              <span className="text-emerald-500">Played</span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                Played
+              </span>
             )}
             {!episode.completed && episode.playbackPosition > 0 && (
-              <span className="text-indigo-400">In progress</span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                {progressPct}% played
+              </span>
+            )}
+            {isNew && (
+              <span className="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400">
+                NEW
+              </span>
+            )}
+            {episode.downloaded && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                Saved
+              </span>
             )}
           </div>
+
+          {/* Progress bar for in-progress episodes */}
+          {progressPct > 0 && (
+            <div className="mt-2 h-1 rounded-full bg-slate-700 overflow-hidden">
+              <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${progressPct}%` }} />
+            </div>
+          )}
         </div>
 
         {/* Actions */}
