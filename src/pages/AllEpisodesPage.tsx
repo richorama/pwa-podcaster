@@ -42,20 +42,20 @@ function EpisodeRow({
             onClick={() => playEpisode(episode.id)}
             className="text-left w-full"
           >
-            <h3 className="text-sm font-semibold text-slate-100 line-clamp-2 hover:text-indigo-400 transition-colors">
+            <h3 className="text-[15px] font-semibold text-slate-100 leading-snug line-clamp-2 hover:text-indigo-400 transition-colors">
               {episode.title}
             </h3>
           </button>
 
-          <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
-            <span className="text-indigo-400 truncate max-w-[140px]">
+          <div className="flex items-center gap-2 mt-1.5 text-[13px] text-slate-300">
+            <span className="text-indigo-400 truncate max-w-[160px]">
               {podcastTitle}
             </span>
-            <span>·</span>
+            <span className="text-slate-500">·</span>
             <span>{formatDate(episode.pubDate)}</span>
             {episode.duration > 0 && (
               <>
-                <span>·</span>
+                <span className="text-slate-500">·</span>
                 <span>{formatDuration(episode.duration)}</span>
               </>
             )}
