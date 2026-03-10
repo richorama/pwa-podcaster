@@ -4,7 +4,7 @@ export type { Podcast, Episode } from "../services/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import * as audioService from "../services/audioService";
 import { subscribeToPodcast, refreshPodcast, unsubscribe } from "../services/rssService";
-import { downloadEpisode, deleteDownload } from "../services/downloadService";
+import { downloadEpisode, deleteDownload, cleanupEpisodes } from "../services/downloadService";
 
 export interface Toast {
   id: string;
@@ -40,6 +40,7 @@ interface AppState {
 
   download: (episodeId: string) => Promise<void>;
   removeDownload: (episodeId: string) => Promise<void>;
+  cleanup: () => Promise<void>;
 
   addToast: (message: string, type?: Toast["type"]) => void;
   removeToast: (id: string) => void;
@@ -143,8 +144,9 @@ export const useStore = create<AppState>((set, get) => {
         } else {
           get().addToast("All feeds up to date", "info");
         }
+        // Auto-cleanup after refresh
+        await get().cleanup();
       } catch (err: any) {
-        get().addToast(err.message || "Refresh failed", "error");
       }
     },
 
@@ -191,6 +193,22 @@ export const useStore = create<AppState>((set, get) => {
         get().addToast("Download removed", "info");
       } catch (err: any) {
         get().addToast(err.message || "Failed to remove download", "error");
+      }
+    },
+
+    cleanup: async () => {
+      try {
+        const { blobsRemoved, episodesDeleted } = await cleanupEpisodes(
+          get().currentEpisodeId
+        );
+        const parts: string[] = [];
+        if (blobsRemoved > 0) parts.push(`${blobsRemoved} download(s) cleared`);
+        if (episodesDeleted > 0) parts.push(`${episodesDeleted} old episode(s) removed`);
+        if (parts.length > 0) {
+          get().addToast(parts.join(", "), "success");
+        }
+      } catch (err: any) {
+        get().addToast(err.message || "Cleanup failed", "error");
       }
     },
 
